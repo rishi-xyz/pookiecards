@@ -2,7 +2,7 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "pookiecards",
+      "name": "game",
       "dependencies": {
         "next": "16.1.1",
         "react": "19.2.3",
