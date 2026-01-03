@@ -8,6 +8,17 @@ const ChestBoxPage = () => {
   const [openingChest, setOpeningChest] = useState<any>(null);
   const [revealedCards, setRevealedCards] = useState<any[]>([]);
   const [showClaim, setShowClaim] = useState(false);
+  
+  // Define card type
+  type CardType = {
+    id: number;
+    name: string;
+    image: string;
+    hp: number;
+    atk: number;
+    def: number;
+    rarity: string;
+  };
 
   // Chest types data
   const chestTypes = [
@@ -15,7 +26,8 @@ const ChestBoxPage = () => {
       id: 1,
       name: 'Standard',
       cost: 0.5,
-      cards: '3 cards',
+      minCards: 3,
+      maxCards: 3,
       description: 'Mostly common Pokémon',
       color: 'from-gray-600 to-gray-700',
       border: 'border-gray-500'
@@ -24,7 +36,8 @@ const ChestBoxPage = () => {
       id: 2,
       name: 'Rare',
       cost: 1.5,
-      cards: '4-5 cards',
+      minCards: 4,
+      maxCards: 5,
       description: 'Higher chance of rare Pokémon',
       color: 'from-purple-600 to-purple-700',
       border: 'border-purple-500'
@@ -33,7 +46,8 @@ const ChestBoxPage = () => {
       id: 3,
       name: 'Legendary',
       cost: 3.0,
-      cards: '5-7 cards',
+      minCards: 6,
+      maxCards: 7,
       description: 'Guaranteed rare or legendary Pokémon',
       color: 'from-yellow-600 to-yellow-700',
       border: 'border-yellow-500'
@@ -48,35 +62,60 @@ const ChestBoxPage = () => {
     if (selectedChest) {
       // Simulate purchase
       setSelectedChest(null);
-      setOpeningChest(selectedChest);
+      setOpeningChest({...selectedChest}); // Create a copy to preserve data
       startOpeningAnimation();
     }
   };
 
   const startOpeningAnimation = () => {
+    // Store the selected chest in a variable to prevent null reference
+    const chestToOpen = openingChest;
+    
     // Simulate chest opening sequence
     setTimeout(() => {
-      // Generate random cards based on chest type
-      const cardCount = openingChest.name === 'Standard' ? 3 : 
-                       openingChest.name === 'Rare' ? Math.floor(Math.random() * 2) + 4 : 
-                       Math.floor(Math.random() * 3) + 5;
+      // Check if chestToOpen is not null before proceeding
+      if (!chestToOpen) return;
       
-      const sampleCards = [
+      // Generate random cards based on chest type
+      const cardCount = Math.floor(Math.random() * (chestToOpen.maxCards - chestToOpen.minCards + 1)) + chestToOpen.minCards;
+      
+      // Define card pools based on chest type
+      const commonCards = [
         { id: 1, name: 'Pikachu', image: '⚡', hp: 100, atk: 30, def: 20, rarity: 'common' },
+        { id: 8, name: 'Lapras', image: '🌊', hp: 125, atk: 28, def: 32, rarity: 'rare' } // Lapras is common in this context
+      ];
+            
+      const rareCards = [
         { id: 2, name: 'Charizard', image: '🔥', hp: 120, atk: 35, def: 25, rarity: 'rare' },
         { id: 3, name: 'Blastoise', image: '💧', hp: 110, atk: 32, def: 30, rarity: 'rare' },
-        { id: 4, name: 'Venusaur', image: '🌿', hp: 115, atk: 31, def: 28, rarity: 'rare' },
+        { id: 4, name: 'Venusaur', image: '🌿', hp: 115, atk: 31, def: 28, rarity: 'rare' }
+      ];
+            
+      const legendaryCards = [
         { id: 5, name: 'Gengar', image: '👻', hp: 95, atk: 33, def: 18, rarity: 'legendary' },
         { id: 6, name: 'Alakazam', image: '🔮', hp: 85, atk: 38, def: 15, rarity: 'legendary' },
         { id: 7, name: 'Machamp', image: '🥊', hp: 130, atk: 40, def: 25, rarity: 'legendary' },
-        { id: 8, name: 'Lapras', image: '🌊', hp: 125, atk: 28, def: 32, rarity: 'rare' }
+        { id: 9, name: 'Skrull', image: '👽', hp: 140, atk: 42, def: 30, rarity: 'legendary' }
       ];
-
-      // Select random cards based on chest type
-      const selectedCards = [];
+            
+      // Select cards based on chest type
+      const selectedCards: CardType[] = [];
       for (let i = 0; i < cardCount; i++) {
-        const randomIndex = Math.floor(Math.random() * sampleCards.length);
-        selectedCards.push(sampleCards[randomIndex]);
+        let cardPool: CardType[] = [];
+              
+        if (chestToOpen.name === 'Standard') {
+          // Standard chest has mostly common cards
+          cardPool = [...commonCards, ...rareCards];
+        } else if (chestToOpen.name === 'Rare') {
+          // Rare chest has more rare cards
+          cardPool = [...rareCards, ...legendaryCards];
+        } else if (chestToOpen.name === 'Legendary') {
+          // Legendary chest has higher chance of legendary cards
+          cardPool = [...legendaryCards, ...legendaryCards, ...rareCards]; // Double chance for legendary
+        }
+              
+        const randomIndex = Math.floor(Math.random() * cardPool.length);
+        selectedCards.push(cardPool[randomIndex]);
       }
 
       setRevealedCards(selectedCards);
@@ -171,7 +210,7 @@ const ChestBoxPage = () => {
                       </div>
                       <div className="bg-gray-700/50 p-3 rounded-lg">
                         <div className="text-sm text-gray-400">Cards Inside</div>
-                        <div className="text-xl font-bold">{chest.cards}</div>
+                        <div className="text-xl font-bold">{chest.minCards === chest.maxCards ? chest.minCards : `${chest.minCards} – ${chest.maxCards}`}</div>
                       </div>
                     </div>
                     
@@ -214,8 +253,8 @@ const ChestBoxPage = () => {
                   <span className="font-bold text-yellow-400">{selectedChest.cost} SOL</span>
                 </div>
                 <div className="mb-2">
-                  <span className="text-gray-400">Cards Inside: </span>
-                  <span className="font-bold">{selectedChest.cards}</span>
+                  <span className="text-gray-400">You will receive: </span>
+                  <span className="font-bold">{selectedChest.minCards === selectedChest.maxCards ? selectedChest.minCards : `${selectedChest.minCards} – ${selectedChest.maxCards}`} cards</span>
                 </div>
               </div>
               
@@ -255,11 +294,13 @@ const ChestBoxPage = () => {
           <div className="w-full max-w-4xl">
             <h2 className="text-3xl font-bold text-center mb-8">Chest Rewards!</h2>
             
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 mb-8">
+            <div className="mb-4 text-gray-300">You received {revealedCards.length} cards</div>
+            
+            <div className={`grid ${revealedCards.length <= 3 ? 'grid-cols-1 sm:grid-cols-3' : revealedCards.length <= 6 ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4'} gap-6 mb-8`}>
               {revealedCards.map((card, index) => (
                 <div 
                   key={index}
-                  className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 border border-gray-700 animate-fade-in"
+                  className={`bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 border ${card.rarity === 'legendary' ? 'border-yellow-500/50' : 'border-gray-700'} animate-fade-in`}
                   style={{ animationDelay: `${index * 0.2}s` }}
                 >
                   <div className="text-center">
@@ -271,6 +312,10 @@ const ChestBoxPage = () => {
                       <span className="bg-gray-700 px-1 rounded">ATK: {card.atk}</span>
                       <span className="bg-gray-700 px-1 rounded">DEF: {card.def}</span>
                     </div>
+                    
+                    {card.rarity === 'legendary' && (
+                      <div className="mt-2 text-xs text-yellow-400 font-bold">LEGENDARY</div>
+                    )}
                   </div>
                 </div>
               ))}
