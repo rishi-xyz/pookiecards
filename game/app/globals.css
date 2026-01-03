@@ -44,16 +44,90 @@ body {
   100% { transform: translateY(0) translateX(0); }
 }
 
+@keyframes pulseSlow {
+  0%, 100% { transform: scale(1); opacity: 0.4; }
+  50% { transform: scale(1.05); opacity: 0.6; }
+}
+
+@keyframes sparkle {
+  0% { opacity: 0.2; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.2); }
+  100% { opacity: 0.2; transform: scale(1); }
+}
+
+@keyframes rumble {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-1px, -1px); }
+  50% { transform: translate(1px, 1px); }
+  75% { transform: translate(-1px, 1px); }
+}
+
+@keyframes energyFlow {
+  0% { background-position: 0 0; }
+  100% { background-position: 100px 100px; }
+}
+
+@keyframes borderPulse {
+  0%, 100% { border-color: rgba(251, 191, 36, 0.5); box-shadow: 0 0 5px rgba(251, 191, 36, 0.5); }
+  50% { border-color: rgba(251, 191, 36, 0.8); box-shadow: 0 0 15px rgba(251, 191, 36, 0.8); }
+}
+
+@keyframes fadein {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
 .animate-float {
   animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulseSlow 6s ease-in-out infinite;
 }
 
 .animation-delay-1000 {
   animation-delay: 1s;
 }
 
+.animation-delay-1500 {
+  animation-delay: 1.5s;
+}
+
 .animation-delay-2000 {
   animation-delay: 2s;
+}
+
+.animation-delay-3000 {
+  animation-delay: 3s;
+}
+
+.animate-sparkle {
+  animation: sparkle 3s ease-in-out infinite;
+}
+
+.animate-rumble {
+  animation: rumble 8s ease-in-out infinite;
+}
+
+.animate-energy-flow {
+  animation: energyFlow 4s linear infinite;
+}
+
+.animate-border-pulse {
+  animation: borderPulse 2s ease-in-out infinite;
+}
+
+.animate-fade-in {
+  animation: fadein 1.5s ease-out forwards;
+}
+
+.button-standard-battle {
+  animation: breathe 4s ease-in-out infinite;
 }
 
 /* Button hover effects */
@@ -112,4 +186,99 @@ body {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
+}
+
+/* Matchmaking animations */
+@keyframes fadeInOut {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes breathingScale {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes glitch {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+}
+
+@keyframes distortion {
+  0%, 100% { filter: blur(0); transform: scale(1); }
+  50% { filter: blur(1px); transform: scale(1.02); }
+}
+
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes textSlam {
+  0% { transform: scale(0.5) translateY(-20px); opacity: 0; }
+  70% { transform: scale(1.1) translateY(5px); opacity: 1; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+@keyframes pingSlow {
+  0% { transform: scale(1); opacity: 1; }
+  75%, 100% { transform: scale(2); opacity: 0; }
+}
+
+@keyframes energyFlicker {
+  0%, 100% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.5), 0 0 10px rgba(59, 130, 246, 0.5); }
+  50% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.8), 0 0 20px rgba(59, 130, 246, 0.8); }
+}
+
+.animate-fade-in-out {
+  animation: fadeInOut 3s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spinSlow 10s linear infinite;
+}
+
+.animate-breathing-scale {
+  animation: breathingScale 4s ease-in-out infinite;
+}
+
+.animate-glitch {
+  animation: glitch 5s infinite;
+}
+
+.animate-distortion {
+  animation: distortion 2s ease-in-out infinite;
+}
+
+.animate-flicker {
+  animation: flicker 1.5s infinite;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.5s ease-out forwards;
+}
+
+.animate-text-slam {
+  animation: textSlam 0.8s ease-out forwards;
+}
+
+.animate-ping-slow {
+  animation: pingSlow 4s cubic-bezier(0,0,0.2,1) infinite;
+}
+
+.animate-energy-flicker {
+  animation: energyFlicker 2s ease-in-out infinite;
 }
