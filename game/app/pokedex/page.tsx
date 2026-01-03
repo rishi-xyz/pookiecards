@@ -8,10 +8,23 @@ const PokedexPage = () => {
   const [filter, setFilter] = useState<'all' | 'owned' | 'locked'>('all');
   
   // Sample Pokémon data
-  const pokemonData = [
-    { id: 1, name: 'Pikachu', hp: 100, atk: 30, def: 20, owned: true, image: '⚡' },
-    { id: 2, name: 'Charizard', hp: 120, atk: 35, def: 25, owned: true, image: '🔥' },
-    { id: 3, name: 'Blastoise', hp: 110, atk: 32, def: 30, owned: true, image: '💧' },
+  // Define Pokemon type
+  type PokemonType = {
+    id: number;
+    name: string;
+    hp: number;
+    atk: number;
+    def: number;
+    owned: boolean;
+    image: string;
+    attackPotions?: number;
+    defensePotions?: number;
+  };
+  
+  const pokemonData: PokemonType[] = [
+    { id: 1, name: 'Pikachu', hp: 100, atk: 30, def: 20, owned: true, image: '⚡', attackPotions: 2, defensePotions: 1 },
+    { id: 2, name: 'Charizard', hp: 120, atk: 35, def: 25, owned: true, image: '🔥', attackPotions: 3, defensePotions: 2 },
+    { id: 3, name: 'Blastoise', hp: 110, atk: 32, def: 30, owned: true, image: '💧', attackPotions: 1, defensePotions: 3 },
     { id: 4, name: 'Venusaur', hp: 115, atk: 31, def: 28, owned: false, image: '🌿' },
     { id: 5, name: 'Gengar', hp: 95, atk: 33, def: 18, owned: false, image: '👻' },
     { id: 6, name: 'Alakazam', hp: 85, atk: 38, def: 15, owned: false, image: '🔮' },
@@ -19,7 +32,7 @@ const PokedexPage = () => {
     { id: 8, name: 'Lapras', hp: 125, atk: 28, def: 32, owned: false, image: '🌊' },
   ];
   
-  const [selectedPokemon, setSelectedPokemon] = useState<typeof pokemonData[0] | null>(null);
+  const [selectedPokemon, setSelectedPokemon] = useState<PokemonType | null>(null);
   const [showSellModal, setShowSellModal] = useState<any>(null);
   
   const filteredPokemon = filter === 'owned' 
@@ -32,6 +45,29 @@ const PokedexPage = () => {
     // In a real app, this would handle the listing logic
     alert(`Listed ${card.name} for ${price} SOL!`);
     setShowSellModal(null);
+  };
+  
+  const usePotion = (type: 'attack' | 'defense') => {
+    if (!selectedPokemon) return;
+    
+    // Create a new pokemon object to update state
+    const updatedPokemon = { ...selectedPokemon };
+    
+    if (type === 'attack' && updatedPokemon.attackPotions && updatedPokemon.attackPotions > 0) {
+      updatedPokemon.atk += 5;
+      updatedPokemon.attackPotions -= 1;
+    } else if (type === 'defense' && updatedPokemon.defensePotions && updatedPokemon.defensePotions > 0) {
+      updatedPokemon.def += 5;
+      updatedPokemon.defensePotions -= 1;
+    }
+    
+    // Update the pokemon in the main data array
+    const updatedPokemonData = pokemonData.map(p => 
+      p.id === updatedPokemon.id ? updatedPokemon : p
+    );
+    
+    // Update the selected pokemon
+    setSelectedPokemon(updatedPokemon);
   };
   
   return (
@@ -179,7 +215,7 @@ const PokedexPage = () => {
             <div className="text-center">
               <div className="text-8xl mb-4">{selectedPokemon.image}</div>
               <h2 className="text-3xl font-bold mb-2">{selectedPokemon.name}</h2>
-              
+                            
               <div className="grid grid-cols-3 gap-4 my-6">
                 <div className="bg-gray-700/50 p-3 rounded-lg">
                   <div className="text-sm text-gray-400">HP</div>
@@ -194,13 +230,53 @@ const PokedexPage = () => {
                   <div className="text-xl font-bold">{selectedPokemon.def}</div>
                 </div>
               </div>
-              
+                            
               <p className="text-gray-300 mb-6">
                 {selectedPokemon.owned 
                   ? 'A powerful Pokémon with balanced stats and unique abilities.' 
                   : 'This Pokémon is currently locked. Win more battles to unlock it!'}
               </p>
-              
+                            
+              {selectedPokemon.owned && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-bold mb-3 text-center">UPGRADES</h3>
+                                
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Attack Potion */}
+                    <button 
+                      className={`p-4 rounded-lg border flex flex-col items-center ${
+                        selectedPokemon.attackPotions && selectedPokemon.attackPotions > 0 
+                          ? 'bg-gradient-to-br from-red-900/50 to-red-800/50 border-red-500/50 hover:from-red-800/50 hover:to-red-700/50 cursor-pointer' 
+                          : 'bg-gray-800/50 border-gray-700 opacity-50 cursor-not-allowed'
+                      }`}
+                      onClick={() => usePotion('attack')}
+                      disabled={selectedPokemon.attackPotions ? selectedPokemon.attackPotions === 0 : true}
+                    >
+                      <div className="text-2xl mb-2">🧪</div>
+                      <span className="text-sm">Attack Potion</span>
+                      <span className="text-xs text-red-400">+5 ATK</span>
+                      <span className="text-xs mt-1">{selectedPokemon.attackPotions ? selectedPokemon.attackPotions : 0} left</span>
+                    </button>
+                                  
+                    {/* Defense Potion */}
+                    <button 
+                      className={`p-4 rounded-lg border flex flex-col items-center ${
+                        selectedPokemon.defensePotions && selectedPokemon.defensePotions > 0 
+                          ? 'bg-gradient-to-br from-blue-900/50 to-blue-800/50 border-blue-500/50 hover:from-blue-800/50 hover:to-blue-700/50 cursor-pointer' 
+                          : 'bg-gray-800/50 border-gray-700 opacity-50 cursor-not-allowed'
+                      }`}
+                      onClick={() => usePotion('defense')}
+                      disabled={selectedPokemon.defensePotions ? selectedPokemon.defensePotions === 0 : true}
+                    >
+                      <div className="text-2xl mb-2">🧪</div>
+                      <span className="text-sm">Defense Potion</span>
+                      <span className="text-xs text-blue-400">+5 DEF</span>
+                      <span className="text-xs mt-1">{selectedPokemon.defensePotions ? selectedPokemon.defensePotions : 0} left</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+                            
               <button 
                 className={`w-full py-3 rounded-lg font-bold ${
                   selectedPokemon.owned 
