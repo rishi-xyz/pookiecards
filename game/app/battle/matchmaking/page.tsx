@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 const BattleMatchmakingPage = () => {
+  const router = useRouter();
   const [matchmakingState, setMatchmakingState] = useState('searching'); // searching, vs, found
   const [matchmakingText, setMatchmakingText] = useState('Searching for opponent...');
   const [dots, setDots] = useState('');
@@ -36,6 +38,11 @@ const BattleMatchmakingPage = () => {
       // After VS reveal, show match found
       setTimeout(() => {
         setMatchmakingState('found');
+        
+        // Redirect to battle arena after showing match found
+        setTimeout(() => {
+          router.push(`/battle/${Date.now()}`);
+        }, 2000);
       }, 2000);
     }, 4000);
 
@@ -44,7 +51,7 @@ const BattleMatchmakingPage = () => {
       clearInterval(dotsInterval);
       clearTimeout(matchTimeout);
     };
-  }, []);
+  }, [router]);
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 via-black to-blue-950 text-white overflow-hidden relative">

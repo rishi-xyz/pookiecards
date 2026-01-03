@@ -282,3 +282,46 @@ body {
 .animate-energy-flicker {
   animation: energyFlicker 2s ease-in-out infinite;
 }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+@keyframes floatUp {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50px);
+  }
+}
+
+@keyframes energySlash {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.animate-shake {
+  animation: shake 0.3s ease-in-out;
+}
+
+.animate-float-up {
+  animation: floatUp 1s ease-out forwards;
+}
+
+.animate-energy-slash {
+  animation: energySlash 0.6s ease-out forwards;
+}
