@@ -20,6 +20,7 @@ const PokedexPage = () => {
   ];
   
   const [selectedPokemon, setSelectedPokemon] = useState<typeof pokemonData[0] | null>(null);
+  const [showSellModal, setShowSellModal] = useState<any>(null);
   
   const filteredPokemon = filter === 'owned' 
     ? pokemonData.filter(p => p.owned)
@@ -27,6 +28,12 @@ const PokedexPage = () => {
       ? pokemonData.filter(p => !p.owned)
       : pokemonData;
 
+  const handleSellCard = (card: any, price: string) => {
+    // In a real app, this would handle the listing logic
+    alert(`Listed ${card.name} for ${price} SOL!`);
+    setShowSellModal(null);
+  };
+  
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 via-black to-blue-950 text-white overflow-hidden relative">
       {/* Animated energy waves background */}
@@ -129,7 +136,19 @@ const PokedexPage = () => {
                       <span className="bg-gray-700 px-2 py-1 rounded">ATK: {pokemon.atk}</span>
                       <span className="bg-gray-700 px-2 py-1 rounded">DEF: {pokemon.def}</span>
                     </div>
-                    
+                                  
+                    {pokemon.owned && (
+                      <button 
+                        className="text-xs bg-gradient-to-r from-yellow-600/30 to-yellow-700/30 text-yellow-300 px-2 py-1 rounded hover:from-yellow-600/50 hover:to-yellow-700/50 transition-all duration-300"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowSellModal(pokemon);
+                        }}
+                      >
+                        Sell
+                      </button>
+                    )}
+                                  
                     {!pokemon.owned && (
                       <div className="text-center text-gray-400 text-sm">
                         <div className="flex justify-center mb-1">
@@ -192,6 +211,92 @@ const PokedexPage = () => {
               >
                 {selectedPokemon.owned ? 'SELECT' : 'LOCKED'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Sell Card Modal */}
+      {showSellModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-8 max-w-md w-full border border-gray-700 relative">
+            <button 
+              className="absolute top-4 right-4 text-gray-400 hover:text-white"
+              onClick={() => setShowSellModal(null)}
+            >
+              ✕
+            </button>
+            
+            <div className="text-center">
+              <h2 className="text-2xl font-bold mb-6">Sell Card</h2>
+              
+              <div className="flex justify-center mb-6">
+                <div className="text-7xl">{showSellModal.image}</div>
+              </div>
+              
+              <div className="text-left mb-6 bg-gray-700/30 p-4 rounded-lg">
+                <div className="mb-2">
+                  <span className="text-gray-400">Pokémon: </span>
+                  <span className="font-bold">{showSellModal.name}</span>
+                </div>
+                <div className="mb-2">
+                  <span className="text-gray-400">LVL: </span>
+                  <span>7</span>
+                </div>
+                <div className="mb-2">
+                  <span className="text-gray-400">HP: </span>
+                  <span>{showSellModal.hp}</span>
+                </div>
+                <div className="mb-2">
+                  <span className="text-gray-400">ATK: </span>
+                  <span>{showSellModal.atk}</span>
+                </div>
+                <div className="mb-2">
+                  <span className="text-gray-400">DEF: </span>
+                  <span>{showSellModal.def}</span>
+                </div>
+              </div>
+              
+              <div className="mb-6">
+                <label className="block text-gray-300 mb-2">Set Price (SOL)</label>
+                <div className="relative">
+                  <input 
+                    type="number" 
+                    placeholder="e.g. 0.50"
+                    min="0.01"
+                    step="0.01"
+                    className="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        const target = e.target as HTMLInputElement;
+                        handleSellCard(showSellModal, target.value);
+                      }
+                    }}
+                  />
+                  <div className="absolute right-3 top-3 text-gray-400">SOL</div>
+                </div>
+                <div className="text-xs text-gray-500 mt-2">Enter a price in SOL</div>
+              </div>
+              
+              <div className="flex space-x-4">
+                <button 
+                  className="flex-1 py-3 rounded-lg bg-gradient-to-r from-gray-600 to-gray-700 text-white font-bold hover:from-gray-700 hover:to-gray-800 transition-all duration-300"
+                  onClick={() => setShowSellModal(null)}
+                >
+                  Cancel
+                </button>
+                <button 
+                  className="flex-1 py-3 rounded-lg bg-gradient-to-r from-yellow-600 to-yellow-500 text-white font-bold hover:from-yellow-700 hover:to-yellow-600 transition-all duration-300"
+                  onClick={() => {
+                    const priceInput = document.querySelector('input[type="number"]') as HTMLInputElement;
+                    if (priceInput && priceInput.value) {
+                      handleSellCard(showSellModal, priceInput.value);
+                    }
+                  }}
+                >
+                  List for Sale
+                </button>
+              </div>
             </div>
           </div>
         </div>
