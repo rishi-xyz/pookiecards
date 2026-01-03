@@ -3,8 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 const BattleArenaPage = () => {
+  const router = useRouter();
   const { battleId } = useParams();
   
   // Player and opponent state
@@ -206,7 +208,10 @@ const BattleArenaPage = () => {
         <header className="flex items-center justify-between p-6">
           <div className="flex items-center space-x-4">
             {/* Logo */}
-            <div className="flex items-center space-x-3 cursor-pointer group">
+            <div 
+              className="flex items-center space-x-3 cursor-pointer group"
+              onClick={() => router.back()}
+            >
               <div className="w-12 h-12 rounded-full bg-gradient-to-r from-red-500 to-blue-500 flex items-center justify-center">
                 <span className="text-xl font-bold text-white">P</span>
               </div>
