@@ -1,8 +1,62 @@
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
 const BattleUI = () => {
+  const [walletAddress, setWalletAddress] = useState<string>('');
+  const [isConnecting, setIsConnecting] = useState<boolean>(false);
+  const [isConnected, setIsConnected] = useState<boolean>(false);
+
+  const connectWallet = async () => {
+    if (typeof window !== 'undefined' && window.solana && window.solana.isPhantom) {
+      try {
+        setIsConnecting(true);
+        const response = await window.solana.connect();
+        setWalletAddress(response.publicKey.toString());
+        setIsConnected(true);
+      } catch (err) {
+        console.error('Error connecting to wallet:', err);
+      } finally {
+        setIsConnecting(false);
+      }
+    } else {
+      // Open Phantom wallet download page if not installed
+      window.open('https://phantom.app/', '_blank');
+    }
+  };
+
+  const disconnectWallet = async () => {
+    if (typeof window !== 'undefined' && window.solana) {
+      try {
+        await window.solana.disconnect();
+        setWalletAddress('');
+        setIsConnected(false);
+      } catch (err) {
+        console.error('Error disconnecting wallet:', err);
+      }
+    }
+  };
+
+  const formatAddress = (address: string) => {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  useEffect(() => {
+    // Check if wallet is already connected on component mount
+    if (typeof window !== 'undefined' && window.solana) {
+      window.solana.connect({ onlyIfTrusted: true }).then((response: any) => {
+        if (response.publicKey) {
+          setWalletAddress(response.publicKey.toString());
+          setIsConnected(true);
+        }
+      }).catch(() => {
+        // Wallet not connected, that's fine
+      });
+    }
+  }, []);
+
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 via-black to-blue-950 text-white overflow-hidden relative">
       {/* Animated energy waves background */}
@@ -52,9 +106,13 @@ const BattleUI = () => {
           
           {/* Wallet Button */}
           <div className="flex items-center space-x-4">
-            <button className="px-4 py-2 rounded-lg glass-effect border border-blue-500/30 text-blue-300 hover:border-blue-400 hover:text-blue-200 transition-all duration-300 flex items-center space-x-2">
-              <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-              <span>Wallet</span>
+            <button 
+              onClick={isConnected ? disconnectWallet : connectWallet}
+              disabled={isConnecting}
+              className="px-4 py-2 rounded-lg glass-effect border border-blue-500/30 text-blue-300 hover:border-blue-400 hover:text-blue-200 transition-all duration-300 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-yellow-400'} animate-pulse`}></div>
+              <span>{isConnecting ? 'Connecting...' : isConnected ? formatAddress(walletAddress) : 'Connect Wallet'}</span>
             </button>
           </div>
         </header>
@@ -63,8 +121,10 @@ const BattleUI = () => {
         <div className="flex justify-center mb-8">
           <div className="flex items-center space-x-3 px-4 py-2 rounded-full glass-effect border border-gray-600/30 flex items-center">
             <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-              <span className="text-blue-300 font-medium">0x742...8c3F</span>
+              <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-gray-400'} animate-pulse`}></div>
+              <span className="text-blue-300 font-medium">
+                {isConnected ? formatAddress(walletAddress) : 'Not Connected'}
+              </span>
             </div>
             <div className="h-4 w-px bg-gray-600"></div>
             <span className="text-yellow-300 font-medium">Nevis</span>
