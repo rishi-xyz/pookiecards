@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const MarketplacePage = () => {
   const [selectedCard, setSelectedCard] = useState<any>(null);
@@ -64,9 +65,13 @@ const MarketplacePage = () => {
           <div className="flex items-center space-x-4">
             {/* Logo */}
             <div className="flex items-center space-x-3 cursor-pointer group">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-red-500 to-blue-500 flex items-center justify-center">
-                <span className="text-xl font-bold text-white">P</span>
-              </div>
+              <Image
+                src="/logo001.png"
+                alt="Pokecards Logo"
+                width={48}
+                height={48}
+                className="w-12 h-12 rounded-full"
+              />
               <Link href="/market">
                 <h1 className="text-2xl font-bold">
                   Pokecards

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import Image from 'next/image';
 
 const PokemonDetailPage = () => {
   const { pokemonId } = useParams();
@@ -30,7 +31,8 @@ const PokemonDetailPage = () => {
            pokemonId === '7' ? '🥊' : '🌊',
     potions: {
       attack: 2,
-      defense: 1
+      defense: 1,
+      hp: 3
     },
     stones: 1,
     canEvolve: true
@@ -118,9 +120,13 @@ const PokemonDetailPage = () => {
           <div className="flex items-center space-x-4">
             {/* Logo */}
             <div className="flex items-center space-x-3 cursor-pointer group">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-red-500 to-blue-500 flex items-center justify-center">
-                <span className="text-xl font-bold text-white">P</span>
-              </div>
+              <Image
+                src="/logo001.png"
+                alt="Logo"
+                width={48}
+                height={48}
+                className="w-12 h-12 rounded-full"
+              />
               <Link href="/">
                 <h1 className="text-2xl font-bold">
                   Pokecards
@@ -141,88 +147,90 @@ const PokemonDetailPage = () => {
         {/* Main Content */}
         <div className="flex-grow flex items-center justify-center p-8">
           <div className={`w-full max-w-md bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 border border-gray-700 ${evolutionAnimation ? 'animate-fade-out-in' : ''}`}>
-            {/* Pokémon Info Section */}
-            <div className="text-center mb-8">
-              <div className={`text-8xl mb-4 transition-all duration-300 ${evolutionAnimation ? 'scale-110' : ''}`}>
-                {pokemon.image}
+            {/* Card Container */}
+            <div className="relative mb-8">
+              {/* Card Image */}
+              <div className="w-full h-96 bg-gradient-to-br from-blue-900 to-purple-900 rounded-xl border-4 border-white/20 relative overflow-hidden flex items-center justify-center">
+                <div className={`text-8xl transition-all duration-300 ${evolutionAnimation ? 'scale-110' : ''}`}>
+                  {pokemon.image}
+                </div>
+                
+                {/* Level display at top left inside the card */}
+                <div className="absolute top-2 left-2 text-white font-bold text-lg bg-black/50 px-2 py-1 rounded inline-block">
+                  Lv. {pokemon.level}
+                </div>
+                
+                {/* Stats overlay at bottom of the card */}
+                <div className="absolute bottom-0 left-0 right-0 bg-blue-600/90 text-white p-3 rounded-b-lg">
+                  <div className="text-center text-sm">
+                    <div className="flex justify-between">
+                      <span>HP: {pokemon.hp}</span>
+                      <span>ATK: {pokemon.attack}</span>
+                      <span>DEF: {pokemon.defense}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <h1 className="text-3xl font-bold mb-2">{pokemon.name}</h1>
-              <div className="text-lg text-gray-400 mb-6">LVL: {pokemon.level}</div>
+              
+              {/* Pokémon Name */}
+              <h1 className="text-3xl font-bold mt-4 text-center">{pokemon.name}</h1>
             </div>
             
-            {/* Stats Section */}
+            {/* Potion & Evolution Buttons Below the Card */}
             <div className="mb-8">
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 bg-gray-700/50 rounded-lg">
-                  <span className="text-gray-300">HP</span>
-                  <span className="font-bold">{pokemon.hp}</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-gray-700/50 rounded-lg">
-                  <span className="text-gray-300">ATK</span>
-                  <span className="font-bold text-red-400">{pokemon.attack}</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-gray-700/50 rounded-lg">
-                  <span className="text-gray-300">DEF</span>
-                  <span className="font-bold text-blue-400">{pokemon.defense}</span>
-                </div>
-              </div>
-            </div>
-            
-            {/* Potions & Stones Section */}
-            <div>
               <h2 className="text-xl font-bold mb-4 text-center">UPGRADES</h2>
               
-              <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="flex flex-col space-y-4">
                 {/* Attack Potion */}
                 <button 
-                  className={`p-4 rounded-lg border flex flex-col items-center ${
-                    pokemon.potions.attack > 0 
-                      ? 'bg-gradient-to-br from-red-900/50 to-red-800/50 border-red-500/50 hover:from-red-800/50 hover:to-red-700/50 cursor-pointer' 
-                      : 'bg-gray-800/50 border-gray-700 opacity-50 cursor-not-allowed'
-                  }`}
+                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
                   onClick={useAttackPotion}
                   disabled={pokemon.potions.attack === 0}
                 >
-                  <div className="text-2xl mb-2">🧪</div>
-                  <span className="text-sm">Attack Potion</span>
-                  <span className="text-xs text-red-400">+5 ATK</span>
-                  <span className="text-xs mt-1">{pokemon.potions.attack} left</span>
+                  Attack Potion
                 </button>
                 
                 {/* Defense Potion */}
                 <button 
-                  className={`p-4 rounded-lg border flex flex-col items-center ${
-                    pokemon.potions.defense > 0 
-                      ? 'bg-gradient-to-br from-blue-900/50 to-blue-800/50 border-blue-500/50 hover:from-blue-800/50 hover:to-blue-700/50 cursor-pointer' 
-                      : 'bg-gray-800/50 border-gray-700 opacity-50 cursor-not-allowed'
-                  }`}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
                   onClick={useDefensePotion}
                   disabled={pokemon.potions.defense === 0}
                 >
-                  <div className="text-2xl mb-2">🧪</div>
-                  <span className="text-sm">Defense Potion</span>
-                  <span className="text-xs text-blue-400">+5 DEF</span>
-                  <span className="text-xs mt-1">{pokemon.potions.defense} left</span>
+                  Defense Potion
+                </button>
+                
+                {/* HP Potion */}
+                <button 
+                  className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm"
+                  onClick={() => {
+                    if (pokemon.potions.hp > 0) {
+                      setPokemon(prev => ({
+                        ...prev,
+                        hp: prev.hp + 12,
+                        level: prev.level + 1,
+                        potions: {
+                          ...prev.potions,
+                          hp: prev.potions.hp - 1
+                        }
+                      }));
+                    }
+                  }}
+                  disabled={pokemon.potions.hp === 0}
+                >
+                  HP Potion
+                </button>
+                
+                {/* Evolution Stone */}
+                <button 
+                  className={`bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded text-sm ${
+                    (pokemon.stones === 0 || !pokemon.canEvolve) ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                  onClick={useEvolutionStone}
+                  disabled={pokemon.stones === 0 || !pokemon.canEvolve}
+                >
+                  Evolution Stone
                 </button>
               </div>
-              
-              {/* Evolution Stone */}
-              <button 
-                className={`w-full p-4 rounded-lg border flex flex-col items-center ${
-                  pokemon.stones > 0 && pokemon.canEvolve
-                    ? 'bg-gradient-to-br from-purple-900/50 to-purple-800/50 border-purple-500/50 hover:from-purple-800/50 hover:to-purple-700/50 cursor-pointer' 
-                    : 'bg-gray-800/50 border-gray-700 opacity-50 cursor-not-allowed'
-                }`}
-                onClick={useEvolutionStone}
-                disabled={pokemon.stones === 0 || !pokemon.canEvolve}
-              >
-                <div className="text-2xl mb-2">💎</div>
-                <span className="text-sm">Evolution Stone</span>
-                <span className="text-xs mt-1">{pokemon.stones} left</span>
-                {!pokemon.canEvolve && (
-                  <span className="text-xs text-gray-400 mt-1">Already evolved</span>
-                )}
-              </button>
             </div>
             
             {/* Back Button */}
