@@ -1,0 +1,21 @@
+[toolchain]
+package_manager = "yarn"
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.localnet]
+programs = "Fy2kUdeX979xZKx4RtZjwTU1dfPngr1rDg21sHzeQvpa"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "localnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "anchor test --skip-local-validator"
+
+[hooks]
