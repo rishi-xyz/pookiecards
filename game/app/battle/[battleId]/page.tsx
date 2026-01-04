@@ -4,41 +4,157 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import initializeColyseusClient from '@/src/utils/colyseusClient';
 
 const BattleArenaPage = () => {
   const router = useRouter();
   const { battleId } = useParams();
   
-  // Player and opponent state
+  // Player and opponent state - initialize with empty data
   const [player, setPlayer] = useState({
-    name: 'Nevis',
+    name: 'Player',
     hp: 100,
     maxHp: 100,
     atk: 30,
     def: 20,
-    defending: false
+    defending: false,
+    id: null
   });
   
   const [opponent, setOpponent] = useState({
-    name: 'TRAINER',
+    name: 'Opponent',
     hp: 100,
     maxHp: 100,
     atk: 28,
     def: 22,
-    defending: false
+    defending: false,
+    id: null
   });
   
-  const [isPlayerTurn, setIsPlayerTurn] = useState(true); // Player always starts for demo
+  const [isPlayerTurn, setIsPlayerTurn] = useState(true);
   const [battleMessage, setBattleMessage] = useState('YOUR TURN');
   const [battleLog, setBattleLog] = useState<string[]>([]);
   const [isAnimating, setIsAnimating] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [winner, setWinner] = useState<'player' | 'opponent' | null>(null);
+  const [winnerName, setWinnerName] = useState('');
   const [attackAnimation, setAttackAnimation] = useState(false);
   const [defenseAnimation, setDefenseAnimation] = useState(false);
   const [damageIndicator, setDamageIndicator] = useState<{value: number, x: number, y: number} | null>(null);
   const [opponentShake, setOpponentShake] = useState(false);
   const [playerShield, setPlayerShield] = useState(false);
+  const [colyseusRoom, setColyseusRoom] = useState<any>(null);
+  const [isPlayerLocal, setIsPlayerLocal] = useState(true); // Track if this player is the local player
+  
+  useEffect(() => {
+    const connectToBattleRoom = async () => {
+      try {
+        console.log(`🔌 Attempting to connect to battle room: ${battleId}`);
+        const client = initializeColyseusClient();
+        
+        // Join the battle room using the room ID from the URL
+        const room = await client.joinById(battleId);
+        console.log(`✅ Successfully connected to battle room: ${room.roomId}`);
+        setColyseusRoom(room);
+        
+        // Send player ready message
+        room.send('playerReady', { name: 'Player' });
+        
+        // Listen for game state updates
+        room.onMessage('gameStateUpdate', (message: any) => {
+          console.log('Game state update received:', message);
+          
+          // Update opponent data
+          setOpponent(prev => ({
+            ...prev,
+            hp: message.gameData.player1.id !== room.sessionId ? 
+              message.gameData.player1.hp : message.gameData.player2.hp,
+            maxHp: message.gameData.player1.id !== room.sessionId ? 
+              message.gameData.player1.maxHp : message.gameData.player2.maxHp,
+            defending: message.gameData.player1.id !== room.sessionId ? 
+              message.gameData.player1.defending : message.gameData.player2.defending,
+            name: message.gameData.player1.id !== room.sessionId ? 
+              message.gameData.player1.name : message.gameData.player2.name,
+            id: message.gameData.player1.id !== room.sessionId ? 
+              message.gameData.player1.id : message.gameData.player2.id,
+          }));
+          
+          // Update player data
+          setPlayer(prev => ({
+            ...prev,
+            hp: message.gameData.player1.id === room.sessionId ? 
+              message.gameData.player1.hp : message.gameData.player2.hp,
+            maxHp: message.gameData.player1.id === room.sessionId ? 
+              message.gameData.player1.maxHp : message.gameData.player2.maxHp,
+            defending: message.gameData.player1.id === room.sessionId ? 
+              message.gameData.player1.defending : message.gameData.player2.defending,
+            name: message.gameData.player1.id === room.sessionId ? 
+              message.gameData.player1.name : message.gameData.player2.name,
+            id: message.gameData.player1.id === room.sessionId ? 
+              message.gameData.player1.id : message.gameData.player2.id,
+          }));
+          
+          // Update turn information
+          setIsPlayerTurn(message.turn === room.sessionId);
+          
+          // Update battle log
+          setBattleLog(prev => [...prev, ...message.battleLog]);
+          
+          // Update battle status
+          if (message.battleEnded) {
+            setGameOver(true);
+            if (message.winner === room.sessionId) {
+              setWinner('player');
+              setWinnerName(message.winnerName);
+            } else {
+              setWinner('opponent');
+              setWinnerName(message.winnerName);
+            }
+          }
+        });
+        
+        // Listen for battle ended
+        room.onMessage('battleEnded', (message: any) => {
+          console.log('Battle ended:', message);
+          setGameOver(true);
+          if (message.winner === room.sessionId) {
+            setWinner('player');
+            setWinnerName(message.winnerName);
+          } else {
+            setWinner('opponent');
+            setWinnerName(message.winnerName);
+          }
+        });
+        
+        // Listen for errors
+        room.onError((code: number, message: string) => {
+          console.error(`❌ Room error ${code}: ${message}`);
+          // Don't automatically redirect - let user decide with END BATTLE button
+        });
+        
+        // Listen for when room is left
+        room.onLeave(() => {
+          console.log('👋 Disconnected from battle room');
+          // Don't automatically redirect - let user decide with END BATTLE button
+        });
+        
+      } catch (error) {
+        console.error(`❌ Error connecting to battle room ${battleId}:`, error);
+        console.log('🔄 Could not connect to battle room, staying on page');
+        // Don't automatically redirect - let user try again or use END BATTLE button
+      }
+    };
+    
+    connectToBattleRoom();
+    
+    // Clean up on unmount
+    return () => {
+      if (colyseusRoom) {
+        colyseusRoom.send('leaveBattle', {});
+        colyseusRoom.leave();
+      }
+    };
+  }, [battleId, router]);
 
   // Reset defense status at the start of each turn
   useEffect(() => {
@@ -51,127 +167,44 @@ const BattleArenaPage = () => {
   }, [isPlayerTurn]);
 
   const handleAttack = () => {
-    if (!isPlayerTurn || isAnimating || gameOver) return;
+    if (!isPlayerTurn || isAnimating || gameOver || !colyseusRoom) return;
       
     setIsAnimating(true);
     setAttackAnimation(true);
       
-    // Calculate damage: damage = attacker.ATK - defender.DEF
-    let damage = player.atk - opponent.def;
-    if (opponent.defending) {
-      damage = Math.floor(damage / 2);
-    }
-    if (damage < 1) damage = 1;
-      
-    setOpponent(prev => ({ 
-      ...prev, 
-      hp: Math.max(0, prev.hp - damage) 
-    }));
-      
-    // Set damage indicator
-    setDamageIndicator({value: -damage, x: 50, y: 30});
-      
-    // Opponent shake animation
-    setOpponentShake(true);
-    setTimeout(() => setOpponentShake(false), 300);
-      
-    setBattleMessage(`${player.name} attacks for ${damage} damage!`);
-    setBattleLog(prev => [...prev, `${player.name} attacks for ${damage} damage!`]);
-      
+    // Send attack action to the server
+    colyseusRoom.send('playerAction', { action: 'attack' });
+    
+    setBattleMessage(`${player.name} is attacking...`);
+    
     // Brief animation delay
     setTimeout(() => {
       setAttackAnimation(false);
-      setIsPlayerTurn(false);
-      setBattleMessage('OPPONENT\'S TURN');
       setIsAnimating(false);
-        
-      // Opponent's turn after a delay
-      setTimeout(() => {
-        opponentTurn();
-      }, 1500);
     }, 1000);
   };
 
   const handleDefense = () => {
-    if (!isPlayerTurn || isAnimating || gameOver) return;
+    if (!isPlayerTurn || isAnimating || gameOver || !colyseusRoom) return;
       
     setIsAnimating(true);
     setDefenseAnimation(true);
       
-    // Increase defense temporarily
-    setPlayer(prev => ({ 
-      ...prev, 
-      defending: true
-    }));
-      
-    // Show shield animation
-    setPlayerShield(true);
-      
-    setBattleMessage(`${player.name} is defending!`);
-    setBattleLog(prev => [...prev, `${player.name} is defending!`]);
-      
+    // Send defense action to the server
+    colyseusRoom.send('playerAction', { action: 'defend' });
+    
+    setBattleMessage(`${player.name} is defending...`);
+    
+    // Brief animation delay
     setTimeout(() => {
       setDefenseAnimation(false);
-      setIsPlayerTurn(false);
-      setBattleMessage('OPPONENT\'S TURN');
       setIsAnimating(false);
-        
-      // Opponent's turn after a delay
-      setTimeout(() => {
-        opponentTurn();
-      }, 1500);
     }, 1000);
   };
 
-  const opponentTurn = () => {
-    // Simple AI: 50% chance to attack, 50% chance to defend
-    const action = Math.random() > 0.5 ? 'attack' : 'defend';
-    
-    if (action === 'attack') {
-      let damage = opponent.atk - player.def;
-      if (player.defending) {
-        damage = Math.floor(damage / 2);
-      }
-      if (damage < 1) damage = 1;
-      
-      setPlayer(prev => ({ 
-        ...prev, 
-        hp: Math.max(0, prev.hp - damage) 
-      }));
-      
-      setBattleMessage(`${opponent.name} attacks for ${damage} damage!`);
-      setBattleLog(prev => [...prev, `${opponent.name} attacks for ${damage} damage!`]);
-    } else {
-      setOpponent(prev => ({ 
-        ...prev, 
-        defending: true
-      }));
-      
-      setBattleMessage(`${opponent.name} is defending!`);
-      setBattleLog(prev => [...prev, `${opponent.name} is defending!`]);
-    }
-    
-    // After opponent's action, return to player's turn
-    setTimeout(() => {
-      setIsPlayerTurn(true);
-      setBattleMessage('YOUR TURN');
-    }, 1500);
-  };
 
-  // Check for battle end
-  useEffect(() => {
-    if (player.hp <= 0) {
-      setBattleMessage('You have been defeated!');
-      setBattleLog(prev => [...prev, 'You have been defeated!']);
-      setGameOver(true);
-      setWinner('opponent');
-    } else if (opponent.hp <= 0) {
-      setBattleMessage('Victory! You won the battle!');
-      setBattleLog(prev => [...prev, 'Victory! You won the battle!']);
-      setGameOver(true);
-      setWinner('player');
-    }
-  }, [player.hp, opponent.hp]);
+
+
 
 
 
@@ -352,7 +385,7 @@ const BattleArenaPage = () => {
           </div>
           
           {/* Action Buttons */}
-          <div className="flex justify-center space-x-8 mt-12">
+          <div className="flex space-x-4">
             <button
               onClick={handleAttack}
               disabled={!isPlayerTurn || gameOver || isAnimating}
@@ -381,6 +414,25 @@ const BattleArenaPage = () => {
               `}
             >
               <span>DEFENSE</span>
+            </button>
+            
+            <button
+              onClick={() => {
+                if (colyseusRoom) {
+                  console.log('🔪 Manually ending battle');
+                  colyseusRoom.send('leaveBattle', {});
+                  colyseusRoom.leave();
+                }
+                router.push('/');
+              }}
+              className="
+                w-32 h-16 rounded-xl flex items-center justify-center text-lg font-bold text-white overflow-hidden
+                bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-800 hover:to-gray-700 cursor-pointer
+                transition-all duration-300 transform hover:scale-105 active:scale-95
+                border border-gray-500/30
+              "
+            >
+              <span>END BATTLE</span>
             </button>
           </div>
         </div>
@@ -433,7 +485,13 @@ const BattleArenaPage = () => {
                     </button>
                     <button 
                       className="flex-1 py-3 rounded-lg bg-gradient-to-r from-gray-600 to-gray-700 text-white font-bold hover:from-gray-700 hover:to-gray-800 transition-all duration-300"
-                      onClick={() => window.location.href = '/'}
+                      onClick={() => {
+                        if (colyseusRoom) {
+                          colyseusRoom.send('leaveBattle', {});
+                          colyseusRoom.leave();
+                        }
+                        router.push('/');
+                      }}
                     >
                       BACK TO MENU
                     </button>
@@ -470,7 +528,13 @@ const BattleArenaPage = () => {
                     </button>
                     <button 
                       className="flex-1 py-3 rounded-lg bg-gradient-to-r from-gray-600 to-gray-700 text-white font-bold hover:from-gray-700 hover:to-gray-800 transition-all duration-300"
-                      onClick={() => window.location.href = '/'}
+                      onClick={() => {
+                        if (colyseusRoom) {
+                          colyseusRoom.send('leaveBattle', {});
+                          colyseusRoom.leave();
+                        }
+                        router.push('/');
+                      }}
                     >
                       BACK TO MENU
                     </button>
