@@ -6,7 +6,10 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-programs = "Fy2kUdeX979xZKx4RtZjwTU1dfPngr1rDg21sHzeQvpa"
+game = "5vaAbpjpAShx3DbxBaxShMY9Vj9RXCXH1H4gWKGzoTHa"
+
+[programs.testnet]
+game = "5vaAbpjpAShx3DbxBaxShMY9Vj9RXCXH1H4gWKGzoTHa"
 
 [registry]
 url = "https://api.apr.dev"
@@ -14,8 +17,5 @@ url = "https://api.apr.dev"
 [provider]
 cluster = "localnet"
 wallet = "~/.config/solana/id.json"
-
-[scripts]
-test = "anchor test --skip-local-validator"
 
 [hooks]
